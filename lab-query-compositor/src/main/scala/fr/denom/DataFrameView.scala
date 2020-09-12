@@ -20,7 +20,7 @@ final case class ProjectionQuery(source: DataFrameView,
                                  drop: SortedSet[Column] = SortedSet.empty,
                                  add: SortedSet[Column] = SortedSet.empty,
                                  replace: Map[Column, Column] = Map.empty) extends QueryView {
-  val schema: SortedSet[Column] = Schema.from(source.schema, drop, add, replace)
+  val schema: SortedSet[Column] = Schema.from(source.schema.map(x => SimpleColumn(x.name)), drop, add, replace)
   val query: String =
     s"""SELECT
        | (${Schema.asColumnsExpression(schema)})
@@ -40,8 +40,7 @@ final case class SimpleTable(schema: SortedSet[Column], name: String) extends Ta
 
 object Schema {
   def from(base: SortedSet[Column], drop: SortedSet[Column], add: SortedSet[Column], replace: Map[Column, Column]): SortedSet[Column] = {
-    val newBase: SortedSet[Column] = base.map(x => SimpleColumn(x.name))
-    (newBase ++ add).collect {
+    (base ++ add).collect {
       case col if replace.contains(col) => replace(col)
       case col if !drop.contains(col) => col
     }
