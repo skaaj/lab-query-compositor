@@ -1,22 +1,33 @@
 package fr.denom
 
-final case class Column(name: String)
+sealed trait Column {
+  def name: String
+}
 
+final case class SimpleColumn(override val name: String) extends Column {
+  override def toString: String = name
+}
+
+final case class ComputedColumn(override val name: String, expression: String) extends Column {
+  override def toString: String = s"$expression AS $name"
+}
 
 object Column {
+  implicit val columnOrdering: Ordering[Column] = Ordering.by(_.name)
+
   implicit class ColumnExt(val sc: StringContext) extends AnyVal {
     def col(args: Any*): Column = {
-      val static = sc.parts.iterator
-      val exprs = args.iterator
+      val statics = sc.parts.iterator
+      val expressions = args.iterator
 
-      val sb = new StringBuilder(static.next())
+      val sb = new StringBuilder(statics.next())
 
-      while (exprs.hasNext) {
-        sb.append(exprs.next().toString)
-        sb.append(static.next())
+      while (expressions.hasNext) {
+        sb.append(expressions.next().toString)
+        sb.append(statics.next())
       }
 
-      Column(sb.toString)
+      SimpleColumn(sb.toString)
     }
   }
 }

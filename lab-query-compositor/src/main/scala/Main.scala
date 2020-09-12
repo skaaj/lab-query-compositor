@@ -1,20 +1,28 @@
 import fr.denom._
 import fr.denom.Column.ColumnExt
 
+import scala.collection.SortedSet
+
 object Main extends App {
   val simpleTable = SimpleTable(
-    schema = Seq(col"id", col"value"),
+    schema = SortedSet(col"id", col"value"),
     name = "simple_table"
   )
 
-  val simpleQuery = SimpleQuery(
-    schema = simpleTable.schema ++ Seq(col"double_value"),
-    query =
-      s"""SELECT st.*, 2 * value AS double_value
-         |FROM ($simpleTable) st
-         |WHERE value > 0""".stripMargin
+  val simpleQuery = ProjectionQuery(
+    source = simpleTable,
+    add = SortedSet(ComputedColumn("double", "2 * value")),
   )
 
-  println(simpleQuery)
+  val parentQuery = ProjectionQuery(
+    source = simpleQuery,
+    drop = SortedSet(col"id"),
+    add = SortedSet(col"padding"),
+    replace = Map(
+      col"double" -> ComputedColumn("quadruple", "2 * double")
+    )
+  )
+
+  println(parentQuery)
 }
 
