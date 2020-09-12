@@ -23,11 +23,9 @@ final case class ProjectionQuery(source: DataFrameView,
   val schema: SortedSet[Column] = Schema.from(source.schema.map(x => SimpleColumn(x.name)), drop, add, replace)
   val query: String =
     s"""SELECT
-       | (${Schema.asColumnsExpression(schema)})
+       |(${Schema.asColumnsExpression(schema)})
        |FROM
-       | (
-       |   ${source.toString}
-       | )""".stripMargin
+       |(${source.toString})""".stripMargin
 }
 
 trait TableView extends DataFrameView {
